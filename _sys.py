@@ -2,8 +2,7 @@
 # 所有if True均为折叠点,并无实际作用
 import socket
 
-from jsons import r_json, w_json
-from _path import sys_log as logging
+from _sys_message import *
 
 # 配置日志
 if True:
@@ -34,26 +33,6 @@ if True:
         # 将ipv4变为数组避免报错
         configure['IPv4'] = tuple(configure['IPv4'])
 
-    # 消息应对策略
-    if True:
-        logging.info('读取消息应对策略')
-        default_r_message = {
-            'handshake': 'handshake'
-        }
-        r_message = r_json('message')
-        if not r_message:
-            logging.info('未找到消息应对策略,启用默认')
-            w_json(default_r_message, 'message')
-            r_message = default_r_message
-        else:
-            for k in default_r_message.keys():
-                if k not in r_message.keys():
-                    logging.info('缺少默认键,启用默认配置,不覆盖文件')
-                    print('请检查消息配置文件')
-                    r_message = default_r_message
-                    break
-        logging.info('读取完毕')
-
     logging.info('configure ok')
 
 # UDP配置
@@ -78,20 +57,23 @@ logging.info('sys ok and Enter the main body of UDP communication\n')
 
 
 def udp_message(message: str, _ip: tuple[str, int]):
-    try:
-        logging.info(f'message:{r_message[message]},ip:{_ip}')
-        _udp.sendto(r_message[message].encode('utf-8'), _ip)
-    except Exception as _e:
+    if message in r_message.keys():
+        if type(r_message[message]).__name__ == 'str':
+            logging.info(f'>>> message:{r_message[message]},ip:{_ip}')
+            _udp.sendto(r_message[message].encode('utf-8'), _ip)
+        else:
+            logging.info(f'执行方法:{message}')
+            _udp.sendto(r_message[message]().encode('utf-8'), _ip)
+    else:
         _udp.sendto('未知指令'.encode('utf-8'), _ip)
-        logging.error(_e)
-        print(_e)
+        logging.info(f'未知指令:{message}')
 
 # 主体
 while True:
     try:
         _message = _udp.recvfrom(10240)
         print(_message)
-        logging.info(_message)
+        logging.info(f"<<< {_message}")
         udp_message(_message[0].decode("utf-8"), _message[1])
     except BlockingIOError:
         pass

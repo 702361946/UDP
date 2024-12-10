@@ -3,8 +3,8 @@
 import socket
 import time
 
-from jsons import r_json, w_json
 from _path import user_log as logging
+from jsons import r_json, w_json
 
 if True:
     logging.name = 'user'
@@ -81,11 +81,11 @@ logging.info('sys ok and Enter the main body of UDP communication')
 while True:
     try:
         _message = input('按下回车发送')
-        logging.info(f'message:{_message}')
+        logging.info(f'>>> message:{_message}')
         _udp.sendto(_message.encode('utf-8'), configure['IPv4'])
         time.sleep(1)
         _message = _udp.recvfrom(10240)
-        logging.info(f'message:{_message}')
+        logging.info(f'<<< message:{_message}')
         print(_message[0].decode("utf-8"))
     except BlockingIOError:
         logging.info('未收到&超时')
